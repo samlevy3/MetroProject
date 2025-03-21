@@ -19,8 +19,14 @@ on:
         default: false
   push:
     branches: [ develop ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend.yml'
   pull_request:
     branches: [ develop ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend.yml'
 
 jobs:
   test:

@@ -19,8 +19,14 @@ on:
         default: false
   push:
     branches: [ develop ]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend.yml'
   pull_request:
     branches: [ develop ]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend.yml'
 
 jobs:
   build:
