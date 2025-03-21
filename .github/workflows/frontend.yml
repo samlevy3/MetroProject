@@ -76,5 +76,5 @@ jobs:
           echo "Debug mode enabled"
           set -x
         fi
-        gsutil -m rsync -r out gs://${{ secrets.GCP_BUCKET_NAME }}
+        gsutil -m rsync -r out/ gs://${{ secrets.GCP_BUCKET_NAME }}
         gsutil -m setmeta -h "Cache-Control:public, max-age=3600" gs://${{ secrets.GCP_BUCKET_NAME }}/**/* 
