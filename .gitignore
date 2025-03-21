@@ -11,6 +11,7 @@ env/
 
 # Node/React
 node_modules/
+/frontend/out
 /frontend/build
 /frontend/.next
 /frontend/.env.local
