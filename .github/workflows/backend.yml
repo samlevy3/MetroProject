@@ -86,6 +86,6 @@ jobs:
           --platform managed \
           --region ${{ secrets.GCP_REGION }} \
           --allow-unauthenticated \
-          --set-env-vars "METRO_API_URL=${{ secrets.METRO_API_URL }}" \
+          --set-env-vars "METRO_API_URL=${{ secrets.METRO_API_URL }},METRO_KEY=${{ secrets.METRO_KEY }}" \
           --concurrency 5 \
           --max-instances 1 

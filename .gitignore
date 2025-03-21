@@ -8,6 +8,7 @@ venv/
 env/
 .env
 .env.local
+/backend/.env
 
 # Node/React
 node_modules/
