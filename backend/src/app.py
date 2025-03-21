@@ -29,6 +29,3 @@ def get_metro_status():
     #     return jsonify({"error": str(e)}), 500
     return jsonify(SAMPLE_METRO_DATA)
 
-
-if __name__ == "__main__":
-    app.run(debug=True, port=5000)
