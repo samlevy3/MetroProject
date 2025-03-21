@@ -2,25 +2,22 @@ name: Backend CI/CD
 
 on:
   push:
-    branches: [ main ]
+    branches: [ develop ]
     paths:
       - 'backend/**'
   pull_request:
-    branches: [ main ]
+    branches: [ develop ]
     paths:
       - 'backend/**'
 
 jobs:
   test:
     runs-on: ubuntu-latest
-
     defaults:
       run:
         working-directory: ./backend
-
     steps:
     - uses: actions/checkout@v4
-
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
@@ -29,34 +26,38 @@ jobs:
         cache-dependency-path: |
           backend/requirements.txt
           backend/requirements-dev.txt
-
     - name: Install tox
       run: pip install tox
-
     - name: Run tox
       run: tox
-      env:
-        METRO_API_URL: ${{ secrets.METRO_API_URL }}
 
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    environment: develop
+    defaults:
+      run:
+        working-directory: ./backend
+    
+    steps:
+    - uses: actions/checkout@v4
+    
     # Setup GCP authentication
     - id: 'auth'
-      if: github.ref == 'refs/heads/main'
       name: 'Authenticate to Google Cloud'
       uses: 'google-github-actions/auth@v2'
       with:
         credentials_json: '${{ secrets.GCP_SA_KEY }}'
 
     - name: 'Set up Cloud SDK'
-      if: github.ref == 'refs/heads/main'
       uses: 'google-github-actions/setup-gcloud@v2'
 
     - name: Build and Push Container
-      if: github.ref == 'refs/heads/main'
       run: |
         gcloud builds submit --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/metro-api
 
     - name: Deploy to Cloud Run
-      if: github.ref == 'refs/heads/main'
       run: |
         gcloud run deploy metro-api \
           --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/metro-api \

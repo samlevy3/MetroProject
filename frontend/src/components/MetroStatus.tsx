@@ -1,5 +1,7 @@
+'use client';
+import React from 'react';
 import { useState, useEffect } from 'react';
-import { MetroLine } from '@/types/metro';
+import { MetroLine } from '../types/metro';
 
 export default function MetroStatus() {
   const [metroData, setMetroData] = useState<MetroLine[]>([]);
@@ -10,10 +12,14 @@ export default function MetroStatus() {
     const fetchMetroData = async () => {
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/metro-status`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch metro data');
+        }
         const data = await response.json();
         setMetroData(data);
       } catch (err) {
         setError('Failed to fetch metro data');
+        console.error(err);
       } finally {
         setLoading(false);
       }

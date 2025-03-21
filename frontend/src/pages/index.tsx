@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import MetroStatus from '@/components/MetroStatus';
+import MetroStatus from '../components/MetroStatus';
 
 export default function Home() {
   return (
