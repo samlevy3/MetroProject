@@ -9,6 +9,7 @@ env/
 .env
 .env.local
 /backend/.env
+/backend/.coverage
 
 # Node/React
 node_modules/
