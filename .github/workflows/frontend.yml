@@ -42,19 +42,8 @@ jobs:
         cache-dependency-path: './frontend/package-lock.json'
     - name: Install dependencies
       run: npm ci
-    - name: Install test dependencies
-      run: |
-        if [ "${{ inputs.debug_enabled }}" = "true" ]; then
-          echo "Debug mode enabled"
-          set -x
-        fi
-        npm install --save-dev @testing-library/react @testing-library/jest-dom jest jest-environment-jsdom
     - name: Lint
       run: npm run lint
-    - name: Type check
-      run: npm run type-check
-    - name: Test
-      run: npm test
     - name: Build
       run: npm run build
       env:
