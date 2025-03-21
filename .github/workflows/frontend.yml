@@ -1,6 +1,22 @@
 name: Frontend CI/CD
 
 on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'develop'
+        type: choice
+        options:
+        - develop
+        - staging
+        - production
+      debug_enabled:
+        description: 'Run with debug logging'
+        required: false
+        type: boolean
+        default: false
   push:
     branches: [ develop ]
     paths:
@@ -26,8 +42,19 @@ jobs:
         cache-dependency-path: './frontend/package-lock.json'
     - name: Install dependencies
       run: npm ci
+    - name: Install test dependencies
+      run: |
+        if [ "${{ inputs.debug_enabled }}" = "true" ]; then
+          echo "Debug mode enabled"
+          set -x
+        fi
+        npm install --save-dev @testing-library/react @testing-library/jest-dom jest jest-environment-jsdom
     - name: Lint
       run: npm run lint
+    - name: Type check
+      run: npm run type-check
+    - name: Test
+      run: npm test
     - name: Build
       run: npm run build
       env:
@@ -35,9 +62,9 @@ jobs:
 
   deploy:
     needs: build
-    if: github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    environment: develop
+    environment: ${{ github.event.inputs.environment || 'develop' }}
     defaults:
       run:
         working-directory: ./frontend
@@ -56,5 +83,9 @@ jobs:
 
     - name: 'Deploy to Cloud Storage'
       run: |
+        if [ "${{ inputs.debug_enabled }}" = "true" ]; then
+          echo "Debug mode enabled"
+          set -x
+        fi
         gsutil -m rsync -r out gs://${{ secrets.GCP_BUCKET_NAME }}
         gsutil -m setmeta -h "Cache-Control:public, max-age=3600" gs://${{ secrets.GCP_BUCKET_NAME }}/**/* 

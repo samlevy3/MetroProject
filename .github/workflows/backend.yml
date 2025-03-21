@@ -1,6 +1,22 @@
 name: Backend CI/CD
 
 on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'develop'
+        type: choice
+        options:
+        - develop
+        - staging
+        - production
+      debug_enabled:
+        description: 'Run with debug logging'
+        required: false
+        type: boolean
+        default: false
   push:
     branches: [ develop ]
     paths:
@@ -33,9 +49,9 @@ jobs:
 
   deploy:
     needs: test
-    if: github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    environment: develop
+    environment: ${{ github.event.inputs.environment || 'develop' }}
     defaults:
       run:
         working-directory: ./backend
@@ -55,6 +71,10 @@ jobs:
 
     - name: Build and Push Container
       run: |
+        if [ "${{ inputs.debug_enabled }}" = "true" ]; then
+          echo "Debug mode enabled"
+          set -x
+        fi
         gcloud builds submit --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/metro-api
 
     - name: Deploy to Cloud Run
