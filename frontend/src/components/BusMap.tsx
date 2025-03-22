@@ -38,7 +38,7 @@ const BusMap = ({ buses }: BusMapProps) => {
         anchor: new window.google.maps.Point(15, 15),
       };
     }
-    return null;
+    return ;
   }, []);
 
   return (
@@ -53,7 +53,7 @@ const BusMap = ({ buses }: BusMapProps) => {
             key={bus.vehicleId}
             position={bus.position}
             onClick={() => setSelectedBus(bus)}
-            icon={busIcon}
+            icon={busIcon || undefined}
           />
         ))}
         
