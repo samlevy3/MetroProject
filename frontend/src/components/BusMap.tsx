@@ -29,6 +29,13 @@ const BusMap = ({ buses }: BusMapProps) => {
     lng: -77.0369
   };
 
+  const busIcon = {
+    url: 'https://maps.google.com/mapfiles/kml/shapes/bus.png',
+    scaledSize: new google.maps.Size(30, 30),
+    origin: new google.maps.Point(0, 0),
+    anchor: new google.maps.Point(15, 15)
+  };
+
   return (
     <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}>
       <GoogleMap
@@ -41,6 +48,7 @@ const BusMap = ({ buses }: BusMapProps) => {
             key={bus.vehicleId}
             position={bus.position}
             onClick={() => setSelectedBus(bus)}
+            icon={busIcon}
           />
         ))}
         
