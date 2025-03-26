@@ -2,19 +2,7 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { Alert, Grid, Table } from '@trussworks/react-uswds';
-
-interface BusPosition {
-  vehicleId: string;
-  position: {
-    lat: number;
-    lng: number;
-  };
-  routeId: string;
-  direction: string;
-  destination: string;
-  deviation: number;
-  lastUpdated: string;
-}
+import { BusPosition } from '@/types/metro';
 
 export default function MetroStatus() {
   const [busData, setBusData] = useState<BusPosition[]>([]);

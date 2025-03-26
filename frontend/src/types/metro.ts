@@ -1,11 +1,13 @@
-export interface MetroLine {
-  id: string;
-  name: string;
-  status: string;
-  nextArrival: string;
-}
-
-export interface ApiResponse {
-  data: MetroLine[];
-  error?: string;
-} 
+export interface BusPosition {
+    vehicleId: string;
+    position: {
+      lat: number;
+      lng: number;
+    };
+    routeId: string;
+    direction: string;
+    destination: string;
+    deviation: number;
+    lastUpdated: string;
+  }
+  
