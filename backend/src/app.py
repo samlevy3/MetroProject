@@ -4,7 +4,7 @@ from io import BytesIO
 
 import requests
 from dotenv import load_dotenv
-from flask import Flask, current_app, jsonify, request, send_file
+from flask import Flask, abort, current_app, jsonify, request, send_file
 from flask_cors import CORS
 from google.cloud import storage
 from google.cloud.exceptions import Forbidden, GoogleCloudError, NotFound
@@ -35,6 +35,13 @@ class BusPosition:
     RouteID: str
     DirectionText: str
     TripHeadsign: str
+
+
+@app.before_request
+def validate_cloudflare_token():
+    token = request.headers.get("X-Custom-Token")
+    if token != os.getenv("CLOUDFLARE_SHARED_SECRET"):
+        abort(403)
 
 
 @app.route("/api/health")

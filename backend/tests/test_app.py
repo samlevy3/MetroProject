@@ -11,8 +11,7 @@ def client():
         yield client
 
 
-def test_health_check(client):
+def test_health_check_no_token(client):
     """Test the health check endpoint"""
     response = client.get("/api/health")
-    assert response.status_code == 200
-    assert response.json == {"status": "healthy"}
+    assert response.status_code == 403
