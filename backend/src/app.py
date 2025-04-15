@@ -17,7 +17,7 @@ load_dotenv()
 # Load environment variables
 METRO_API_URL = os.getenv("METRO_API_URL", "default_url_here")
 METRO_KEY = os.getenv("METRO_KEY")
-GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME", "dc-metro-frontend")
+GCP_BUCKET_NAME = os.getenv("GCP_BUCKET_NAME", "dc-metro-frontend")
 
 
 @dataclass
@@ -94,7 +94,7 @@ def serve_static(filename):
     try:
         # Initialize GCS client and get the bucket
         storage_client = storage.Client()
-        bucket = storage_client.bucket(GCS_BUCKET_NAME)
+        bucket = storage_client.bucket(GCP_BUCKET_NAME)
 
         # Get the blob from GCS
         blob = bucket.blob(filename)
