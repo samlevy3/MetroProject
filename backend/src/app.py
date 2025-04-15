@@ -1,10 +1,13 @@
 import os
 from dataclasses import dataclass
+from io import BytesIO
 
 import requests
 from dotenv import load_dotenv
-from flask import Flask, current_app, jsonify, request
+from flask import Flask, current_app, jsonify, request, send_file
 from flask_cors import CORS
+from google.cloud import storage
+from google.cloud.exceptions import Forbidden, GoogleCloudError, NotFound
 
 app = Flask(__name__)
 CORS(app)
@@ -14,6 +17,7 @@ load_dotenv()
 # Load environment variables
 METRO_API_URL = os.getenv("METRO_API_URL", "default_url_here")
 METRO_KEY = os.getenv("METRO_KEY")
+GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME", "dc-metro-frontend")
 
 
 @dataclass
@@ -76,6 +80,49 @@ def get_metro_status():
     except requests.exceptions.RequestException as e:
         current_app.logger.error(f"Error fetching metro data: {str(e)}")
         return jsonify({"error": "Failed to fetch metro data"}), 500
+
+
+@app.route("/static/<path:filename>")
+def serve_static(filename):
+    try:
+        # Initialize GCS client and get the bucket
+        storage_client = storage.Client()
+        bucket = storage_client.bucket(GCS_BUCKET_NAME)
+
+        # Get the blob from GCS
+        blob = bucket.blob(filename)
+
+        # Check if the blob exists in GCS
+        blob.reload()  # This ensures the blob metadata is refreshed
+        if not blob.exists():
+            return jsonify({"error": "File not found in GCS"}), 404
+
+        # Download the file as bytes
+        file_content = blob.download_as_bytes()
+
+        # Set appropriate content type (you can customize this)
+        content_type = blob.content_type or "application/octet-stream"
+
+        # Serve the file using send_file
+        return send_file(BytesIO(file_content), mimetype=content_type)
+
+    except NotFound:
+        # If the file doesn't exist in GCS
+        app.logger.error("File not found: %s", filename)
+        return jsonify({"error": f"File {filename} not found"}), 404
+
+    except Forbidden:
+        # If the service account doesn't have permission to access the file
+        app.logger.error("Forbidden access to file: %s", filename)
+        return jsonify({"error": "Access denied to the requested file"}), 403
+
+    except GoogleCloudError as e:
+        # General Google Cloud Storage errors
+        app.logger.error("Google Cloud Storage error: %s", str(e))
+        return (
+            jsonify({"error": "An error occurred while fetching the file from GCS"}),
+            500,
+        )
 
 
 if __name__ == "__main__":
