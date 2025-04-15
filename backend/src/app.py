@@ -108,8 +108,11 @@ def serve_static(filename):
 
     except NotFound:
         # If the file doesn't exist in GCS
-        app.logger.error("File not found: %s", filename)
-        return jsonify({"error": f"File {filename} not found"}), 404
+        error_blob = bucket.blob("404.html")
+        error_blob.reload()
+        file_content = error_blob.download_as_bytes()
+        content_type = error_blob.content_type or "text/html"
+        return send_file(BytesIO(file_content), mimetype=content_type), 404
 
     except Forbidden:
         # If the service account doesn't have permission to access the file
