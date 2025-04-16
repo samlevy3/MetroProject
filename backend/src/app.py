@@ -39,8 +39,19 @@ class BusPosition:
 
 @app.before_request
 def validate_cloudflare_token():
-    token = request.headers.get("X-Custom-Token")
-    if token != os.getenv("CLOUDFLARE_SHARED_SECRET"):
+    expected_token = os.getenv("CLOUDFLARE_SHARED_SECRET")
+    incoming_token = request.headers.get("X-Custom-Token")
+
+    if not expected_token:
+        current_app.logger.error("token not set in env")
+        abort(500)  # Misconfigured server
+
+    if not incoming_token:
+        current_app.logger.warning("Missing X-Custom-Token in request")
+        abort(403)
+
+    if incoming_token != expected_token:
+        current_app.logger.warning("Invalid X-Custom-Token provided")
         abort(403)
 
 
