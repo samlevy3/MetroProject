@@ -15,9 +15,10 @@ CORS(app)
 load_dotenv()
 
 # Load environment variables
-METRO_API_URL = os.getenv("METRO_API_URL", "default_url_here")
-METRO_KEY = os.getenv("METRO_KEY")
-GCP_BUCKET_NAME = os.getenv("GCP_BUCKET_NAME", "dc-metro-frontend")
+app.config["METRO_API_URL"] = os.getenv("METRO_API_URL")
+app.config["METRO_KEY"] = os.getenv("METRO_KEY")
+app.config["GCP_BUCKET_NAME"] = os.getenv("GCP_BUCKET_NAME")
+app.config["CLOUDFLARE_SHARED_SECRET"] = os.getenv("CLOUDFLARE_SHARED_SECRET")
 
 
 @dataclass
@@ -39,8 +40,8 @@ class BusPosition:
 
 @app.before_request
 def validate_cloudflare_token():
-    expected_token = os.getenv("CLOUDFLARE_SHARED_SECRET")
     incoming_token = request.headers.get("X-Custom-Token")
+    expected_token = current_app.config.get("CLOUDFLARE_SHARED_SECRET")
 
     if not expected_token:
         current_app.logger.error("token not set in env")
@@ -63,14 +64,16 @@ def health_check():
 @app.route("/api/metro-status")
 def get_metro_status():
     route_id = request.args.get("routeid")
+    metro_key = current_app.config.get("METRO_KEY")
+    metro_api_url = current_app.config.get("METRO_API_URL")
     try:
-        if not METRO_KEY:
+        if not metro_key:
             current_app.logger.error("METRO_KEY environment variable not set")
             return jsonify({"error": "API key not configured"}), 500
 
-        headers = {"api_key": METRO_KEY, "Content-Type": "application/json"}
+        headers = {"api_key": metro_key, "Content-Type": "application/json"}
 
-        url = f"{METRO_API_URL}"
+        url = f"{metro_api_url}"
         if route_id:
             url += f"?RouteID={route_id}"
 
@@ -105,7 +108,7 @@ def serve_static(filename):
     try:
         # Initialize GCS client and get the bucket
         storage_client = storage.Client()
-        bucket = storage_client.bucket(GCP_BUCKET_NAME)
+        bucket = storage_client.bucket(current_app.config.get("GCP_BUCKET_NAME"))
 
         # Get the blob from GCS
         blob = bucket.blob(filename)
