@@ -10,15 +10,18 @@ export default function MetroStatus() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
-  
+  const routeId = searchParams.get('routeid');
+
   useEffect(() => {
     const fetchBusData = async () => {
+      if (!routeId) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        const routeId = searchParams.get('routeid');
         const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/api/metro-status`);
-        if (routeId) {
-          url.searchParams.append('routeid', routeId);
-        }
+        url.searchParams.append('routeid', routeId);
         
         const response = await fetch(url.toString());
         if (!response.ok) {
@@ -35,15 +38,34 @@ export default function MetroStatus() {
     };
 
     fetchBusData();
-  }, [searchParams]);
+  }, [searchParams, routeId]);
 
   if (loading) return <Alert headingLevel="h4" type="info">Loading...</Alert>
   if (error) return <Alert headingLevel="h4" type="error">{error}</Alert>
 
+  // Show landing page if no routeId is provided
+  if (!routeId) {
+    return (
+      <div className="padding-4">
+        <Grid row>
+          <h1 className="usa-heading">DC Metro Bus Tracker</h1>
+        </Grid>
+        <Grid row>
+          <Alert type="info" headingLevel="h4">
+            Please add a route ID to the URL to view bus information.
+            <br />
+            Example: <code>?routeid=L2</code>
+          </Alert>
+        </Grid>
+      </div>
+    );
+  }
+
+  // Show bus data table when routeId is present
   return (
     <div>
       <Grid row>
-        <h1 className="usa-heading">Bus Tracker</h1>      
+        <h1 className="usa-heading">Bus Tracker - Route {routeId}</h1>      
       </Grid>
       <Grid row>
         <Table bordered fullWidth>
@@ -52,6 +74,8 @@ export default function MetroStatus() {
               <th scope="col">Route</th>
               <th scope="col">Direction</th>
               <th scope="col">Destination</th>
+              <th scope="col">Latitude</th>
+              <th scope="col">Longitude</th>
               <th scope="col">Deviation</th>
               <th scope="col">Last Updated</th>
             </tr>
@@ -62,6 +86,8 @@ export default function MetroStatus() {
                 <th scope="row">{bus.routeId}</th>
                 <td>{bus.direction}</td>
                 <td>{bus.destination}</td>
+                <td>{bus.position.lat.toFixed(4)}</td>
+                <td>{bus.position.lng.toFixed(4)}</td>
                 <td>{bus.deviation}</td>
                 <td>{new Date(bus.lastUpdated).toLocaleString()}</td>
               </tr>
