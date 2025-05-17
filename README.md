@@ -25,7 +25,7 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt -r requirements-dev.txt
 
 # Run development server
-gunicorn src.app:APP --bind 0.0.0.0:5000 --reload
+gunicorn src.app:APP --bind 0.0.0.0:5001 --reload
 
 # Run tests
 pytest

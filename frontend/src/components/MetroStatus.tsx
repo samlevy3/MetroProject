@@ -3,16 +3,23 @@ import React from 'react';
 import { useState, useEffect } from 'react';
 import { Alert, Grid, Table } from '@trussworks/react-uswds';
 import { BusPosition } from '@/types/metro';
+import { useSearchParams } from 'next/navigation';
 
 export default function MetroStatus() {
   const [busData, setBusData] = useState<BusPosition[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  const searchParams = useSearchParams();
+  
   useEffect(() => {
     const fetchBusData = async () => {
       try {
+        const routeId = searchParams.get('routeid');
         const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/api/metro-status`);
+        if (routeId) {
+          url.searchParams.append('routeid', routeId);
+        }
+        
         const response = await fetch(url.toString());
         if (!response.ok) {
           throw new Error('Failed to fetch bus data');
@@ -28,7 +35,7 @@ export default function MetroStatus() {
     };
 
     fetchBusData();
-  }, []);
+  }, [searchParams]);
 
   if (loading) return <Alert headingLevel="h4" type="info">Loading...</Alert>
   if (error) return <Alert headingLevel="h4" type="error">{error}</Alert>
@@ -64,4 +71,4 @@ export default function MetroStatus() {
       </Grid>
     </div>
   );
-} 
+}
