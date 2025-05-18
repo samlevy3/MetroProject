@@ -13,27 +13,33 @@ export default function MetroStatus() {
   const routeId = searchParams.get('routeid');
 
   useEffect(() => {
-    if (!document.getElementById('turnstile-widget')) return;
-
-    // Render only if not already rendered
-    if (!document.querySelector('.cf-turnstile')) {
+    // Wait for turnstile to be available
+    const renderTurnstile = () => {
       // @ts-ignore
-      window.turnstile?.render('#turnstile-widget', {
+      if (typeof window.turnstile === 'undefined') {
+        setTimeout(renderTurnstile, 100);
+        return;
+      }
+
+      // @ts-ignore
+      window.turnstile.render('#turnstile-widget', {
         sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!,
         callback: (token: string) => {
           setTurnstileToken(token);
         },
+        mode: 'non-interactive',
       });
-    }
+    };
+
+    renderTurnstile();
   }, []);
 
   useEffect(() => {
     const fetchBusData = async () => {
       if (!routeId || !turnstileToken) {
-        setLoading(false);
         return;
       }
-
+      setLoading(true);
       try {
         const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/api/metro-status`);
         url.searchParams.append('routeid', routeId);
@@ -57,7 +63,7 @@ export default function MetroStatus() {
     };
 
     fetchBusData();
-  }, [searchParams, routeId, turnstileToken]);
+  }, [routeId, turnstileToken]);
 
   if (loading) return <Alert headingLevel="h4" type="info">Loading...</Alert>
   if (error) return <Alert headingLevel="h4" type="error">{error}</Alert>
@@ -83,38 +89,47 @@ export default function MetroStatus() {
   // Show bus data table when routeId is present
   return (
     <div>
-      <div id="turnstile-widget" role="region" aria-label="Human verification"></div>
       <Grid row>
         <h1 className="usa-heading">Bus Tracker - Route {routeId}</h1>      
       </Grid>
-      <Grid row>
-        <Table bordered fullWidth>
-          <thead>
-            <tr>
-              <th scope="col">Route</th>
-              <th scope="col">Direction</th>
-              <th scope="col">Destination</th>
-              <th scope="col">Latitude</th>
-              <th scope="col">Longitude</th>
-              <th scope="col">Deviation</th>
-              <th scope="col">Last Updated</th>
-            </tr>
-          </thead>
-          <tbody>
-            {busData.map((bus) => (
-              <tr key={bus.vehicleId}>
-                <th scope="row">{bus.routeId}</th>
-                <td>{bus.direction}</td>
-                <td>{bus.destination}</td>
-                <td>{bus.position.lat.toFixed(4)}</td>
-                <td>{bus.position.lng.toFixed(4)}</td>
-                <td>{bus.deviation}</td>
-                <td>{new Date(bus.lastUpdated).toLocaleString()}</td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
+      <Grid row className="margin-bottom-2">
+        <div 
+          id="turnstile-widget" 
+          className="margin-bottom-2"
+          role="region" 
+          aria-label="Human verification"
+        ></div>
       </Grid>
+      {turnstileToken && (
+        <Grid row>
+          <Table bordered fullWidth>
+            <thead>
+              <tr>
+                <th scope="col">Route</th>
+                <th scope="col">Direction</th>
+                <th scope="col">Destination</th>
+                <th scope="col">Latitude</th>
+                <th scope="col">Longitude</th>
+                <th scope="col">Deviation</th>
+                <th scope="col">Last Updated</th>
+              </tr>
+            </thead>
+            <tbody>
+              {busData.map((bus) => (
+                <tr key={bus.vehicleId}>
+                  <th scope="row">{bus.routeId}</th>
+                  <td>{bus.direction}</td>
+                  <td>{bus.destination}</td>
+                  <td>{bus.position.lat.toFixed(4)}</td>
+                  <td>{bus.position.lng.toFixed(4)}</td>
+                  <td>{bus.deviation}</td>
+                  <td>{new Date(bus.lastUpdated).toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </Grid>
+      )}
     </div>
   );
 }
