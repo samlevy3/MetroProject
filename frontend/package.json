@@ -10,6 +10,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@marsidev/react-turnstile": "^1.1.0",
     "@react-google-maps/api": "^2.20.6",
     "@trussworks/react-uswds": "^9.1.0",
     "@uswds/uswds": "^3.12.0",

@@ -1,8 +1,9 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Alert, Grid, Table } from '@trussworks/react-uswds';
 import { BusPosition } from '@/types/metro';
 import { useSearchParams } from 'next/navigation';
+import { Turnstile } from '@marsidev/react-turnstile';
 
 export default function MetroStatus() {
   const [busData, setBusData] = useState<BusPosition[]>([]);
@@ -12,49 +13,20 @@ export default function MetroStatus() {
   const searchParams = useSearchParams();
   const routeId = searchParams.get('routeid');
 
-  useEffect(() => {
-    // Wait for turnstile to be available
-    const renderTurnstile = () => {
-      // @ts-ignore
-      if (typeof window.turnstile === 'undefined') {
-        setTimeout(renderTurnstile, 100);
-        return;
-      }
-
-      const container = document.getElementById('turnstile-widget');
-      if (!container) {
-        setTimeout(renderTurnstile, 100);
-        return;
-      }
-
-      // @ts-ignore
-      window.turnstile.render(container, {
-        sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!,
-        callback: (token: string) => {
-          setTurnstileToken(token);
-        },
-        appearance: 'always',
-      });
-    };
-
-    renderTurnstile();
-  }, []);
-
-  useEffect(() => {
-    const fetchBusData = async () => {
-      if (!routeId || !turnstileToken) {
-        return;
-      }
-      setLoading(true);
+  const handleTurnstileSuccess = async (token: string) => {
+    setTurnstileToken(token);
+    if (routeId) {
       try {
+        setLoading(true);
         const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/api/metro-status`);
         url.searchParams.append('routeid', routeId);
         
         const response = await fetch(url.toString(), {
           headers: {
-            'CF-Turnstile-Token': turnstileToken
+            'CF-Turnstile-Token': token
           }
         });
+        
         if (!response.ok) {
           throw new Error('Failed to fetch bus data');
         }
@@ -66,16 +38,14 @@ export default function MetroStatus() {
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchBusData();
-  }, [routeId, turnstileToken]);
+    }
+  };
 
   if (loading) return <Alert headingLevel="h4" type="info">Loading...</Alert>
   if (error) return <Alert headingLevel="h4" type="error">{error}</Alert>
 
-  // Show landing page if no routeId is provided
-  if (!routeId) {
+  // Show landing page if no bus data received
+  if (busData.length === 0) { 
     return (
       <div className="padding-4">
         <Grid row>
@@ -99,14 +69,16 @@ export default function MetroStatus() {
         <h1 className="usa-heading">Bus Tracker - Route {routeId}</h1>      
       </Grid>
       <Grid row className="margin-bottom-2">
-        <div 
-          id="turnstile-widget" 
-          className="margin-bottom-2"
-          role="region" 
-          aria-label="Human verification"
-        ></div>
+        <Turnstile
+          siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+          onSuccess={handleTurnstileSuccess}
+          options={{
+            theme: 'light',
+            appearance: 'always'
+          }}
+        />
       </Grid>
-      {turnstileToken && (
+      {turnstileToken && busData.length > 0 && (
         <Grid row>
           <Table bordered fullWidth>
             <thead>
