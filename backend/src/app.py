@@ -20,7 +20,9 @@ app.config["METRO_KEY"] = os.getenv("METRO_KEY")
 app.config["GCP_BUCKET_NAME"] = os.getenv("GCP_BUCKET_NAME")
 app.config["CLOUDFLARE_SHARED_SECRET"] = os.getenv("CLOUDFLARE_SHARED_SECRET")
 app.config["TURNSTILE_SECRET_KEY"] = os.getenv("TURNSTILE_SECRET_KEY")
-app.config["TURNSTILE_ENABLED"] = os.getenv("TURNSTILE_ENABLED", "true").lower() == "true"
+app.config["TURNSTILE_ENABLED"] = (
+    os.getenv("TURNSTILE_ENABLED", "true").lower() == "true"
+)
 
 
 @dataclass
