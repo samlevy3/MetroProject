@@ -10,8 +10,6 @@ export default function Home() {
       <Head>
         <script
           src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-          async
-          defer
         />
       </Head>
       <div className="usa-app">
