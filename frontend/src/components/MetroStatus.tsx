@@ -13,16 +13,18 @@ export default function MetroStatus() {
   const routeId = searchParams.get('routeid');
 
   useEffect(() => {
-    // @ts-ignore - Turnstile is added via script
-    window.turnstile.ready(() => {
+    if (!document.getElementById('turnstile-widget')) return;
+
+    // Render only if not already rendered
+    if (!document.querySelector('.cf-turnstile')) {
       // @ts-ignore
-      window.turnstile.render('#turnstile-widget', {
-        sitekey: process.env.SITE_KEY,
-        callback: function(token: string) {
+      window.turnstile?.render('#turnstile-widget', {
+        sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!,
+        callback: (token: string) => {
           setTurnstileToken(token);
         },
       });
-    });
+    }
   }, []);
 
   useEffect(() => {
@@ -81,7 +83,7 @@ export default function MetroStatus() {
   // Show bus data table when routeId is present
   return (
     <div>
-      <div id="turnstile-widget"></div>
+      <div id="turnstile-widget" role="region" aria-label="Human verification"></div>
       <Grid row>
         <h1 className="usa-heading">Bus Tracker - Route {routeId}</h1>      
       </Grid>
