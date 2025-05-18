@@ -51,6 +51,8 @@ jobs:
       env:
         NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
         NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }}
+        SITE_KEY: ${{ secrets.SITE_KEY }}
+
 
   deploy:
     needs: build
@@ -76,6 +78,7 @@ jobs:
         env:
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
           NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }}
+          SITE_KEY: ${{ secrets.SITE_KEY }}
       
       # Setup GCP authentication
       - id: 'auth'

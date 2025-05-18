@@ -19,6 +19,7 @@ app.config["METRO_API_URL"] = os.getenv("METRO_API_URL")
 app.config["METRO_KEY"] = os.getenv("METRO_KEY")
 app.config["GCP_BUCKET_NAME"] = os.getenv("GCP_BUCKET_NAME")
 app.config["CLOUDFLARE_SHARED_SECRET"] = os.getenv("CLOUDFLARE_SHARED_SECRET")
+app.config["TURNSTILE_SECRET_KEY"] = os.getenv("TURNSTILE_SECRET_KEY")
 
 
 @dataclass
@@ -38,8 +39,31 @@ class BusPosition:
     TripHeadsign: str
 
 
+def verify_turnstile_token(token):
+    """Verify the Turnstile token with Cloudflare."""
+    try:
+        response = requests.post(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            data={
+                "secret": current_app.config["TURNSTILE_SECRET_KEY"],
+                "response": token,
+            },
+            timeout=10,
+        )
+        result = response.json()
+        return result.get("success", False)
+    except requests.RequestException:
+        current_app.logger.error("Failed to verify Turnstile token")
+        return False
+
+
 @app.before_request
-def validate_cloudflare_token():
+def validate_tokens():
+    # Skip validation for health check
+    if request.path == "/api/health":
+        return
+
+    # Validate Cloudflare token
     incoming_token = request.headers.get("X-Custom-Token")
     expected_token = current_app.config.get("CLOUDFLARE_SHARED_SECRET")
 
@@ -53,6 +77,16 @@ def validate_cloudflare_token():
 
     if incoming_token != expected_token:
         current_app.logger.warning("Invalid X-Custom-Token provided")
+        abort(403)
+
+    # Validate Turnstile token
+    turnstile_token = request.headers.get("CF-Turnstile-Token")
+    if not turnstile_token:
+        current_app.logger.warning("Missing Turnstile token")
+        abort(403)
+
+    if not verify_turnstile_token(turnstile_token):
+        current_app.logger.warning("Invalid Turnstile token")
         abort(403)
 
 

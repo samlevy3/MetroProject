@@ -1,20 +1,33 @@
 'use client';
-import React from 'react';
-import { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, Grid, Table } from '@trussworks/react-uswds';
 import { BusPosition } from '@/types/metro';
 import { useSearchParams } from 'next/navigation';
 
 export default function MetroStatus() {
   const [busData, setBusData] = useState<BusPosition[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const routeId = searchParams.get('routeid');
 
   useEffect(() => {
+    // @ts-ignore - Turnstile is added via script
+    window.turnstile.ready(() => {
+      // @ts-ignore
+      window.turnstile.render('#turnstile-widget', {
+        sitekey: process.env.SITE_KEY,
+        callback: function(token: string) {
+          setTurnstileToken(token);
+        },
+      });
+    });
+  }, []);
+
+  useEffect(() => {
     const fetchBusData = async () => {
-      if (!routeId) {
+      if (!routeId || !turnstileToken) {
         setLoading(false);
         return;
       }
@@ -23,7 +36,11 @@ export default function MetroStatus() {
         const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/api/metro-status`);
         url.searchParams.append('routeid', routeId);
         
-        const response = await fetch(url.toString());
+        const response = await fetch(url.toString(), {
+          headers: {
+            'CF-Turnstile-Token': turnstileToken
+          }
+        });
         if (!response.ok) {
           throw new Error('Failed to fetch bus data');
         }
@@ -38,7 +55,7 @@ export default function MetroStatus() {
     };
 
     fetchBusData();
-  }, [searchParams, routeId]);
+  }, [searchParams, routeId, turnstileToken]);
 
   if (loading) return <Alert headingLevel="h4" type="info">Loading...</Alert>
   if (error) return <Alert headingLevel="h4" type="error">{error}</Alert>
@@ -64,6 +81,7 @@ export default function MetroStatus() {
   // Show bus data table when routeId is present
   return (
     <div>
+      <div id="turnstile-widget"></div>
       <Grid row>
         <h1 className="usa-heading">Bus Tracker - Route {routeId}</h1>      
       </Grid>
