@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Alert, Grid, Table } from '@trussworks/react-uswds';
 import { BusPosition } from '@/types/metro';
 import { useSearchParams } from 'next/navigation';
@@ -12,21 +12,24 @@ export default function MetroStatus() {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const routeId = searchParams.get('routeid');
+  const turnstileEnabled = process.env.NEXT_PUBLIC_TURNSTILE_ENABLED === 'true';
 
-  const handleTurnstileSuccess = async (token: string) => {
+  const fetchBusData = async (turnstileToken?: string) => {
     if (!routeId) return;
     
     try {
-      setTurnstileToken(token); // Set token first
       setLoading(true);
       
       const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/api/metro-status`);
       url.searchParams.append('routeid', routeId);
 
+      const headers: Record<string, string> = {};
+      if (turnstileToken) {
+        headers['CF-Turnstile-Token'] = turnstileToken;
+      }
+
       const response = await fetch(url.toString(), {
-        headers: {
-          'CF-Turnstile-Token': token
-        }
+        headers
       });
 
       if (!response.ok) {
@@ -40,6 +43,17 @@ export default function MetroStatus() {
     } finally {
       setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    if (!turnstileEnabled && routeId) {
+      fetchBusData();
+    }
+  }, [routeId, turnstileEnabled]);
+
+  const handleTurnstileSuccess = async (token: string) => {
+    setTurnstileToken(token);
+    await fetchBusData(token);
   };
 
   // Show landing page if no bus data received
@@ -66,16 +80,18 @@ export default function MetroStatus() {
       <Grid row>
         <h1 className="usa-heading">Bus Tracker - Route {routeId}</h1>
       </Grid>
-      <Grid row className="margin-bottom-2">
-        <Turnstile
-          siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
-          onSuccess={handleTurnstileSuccess}
-          options={{
-            theme: 'light',
-            appearance: 'always'
-          }}
-        />
-      </Grid>
+      {turnstileEnabled && (
+        <Grid row className="margin-bottom-2">
+          <Turnstile
+            siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+            onSuccess={handleTurnstileSuccess}
+            options={{
+              theme: 'light',
+              appearance: 'always'
+            }}
+          />
+        </Grid>
+      )}
       {loading && (
         <Grid row>
           <Alert headingLevel="h4" type="info">Loading bus data...</Alert>
@@ -86,7 +102,7 @@ export default function MetroStatus() {
           <Alert headingLevel="h4" type="error">{error}</Alert>
         </Grid>
       )}
-      {turnstileToken && busData.length > 0 && (
+      {(!turnstileEnabled || turnstileToken) && busData.length > 0 && (
         <Grid row>
           <Table bordered fullWidth>
             <thead>

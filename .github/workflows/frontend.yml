@@ -52,7 +52,7 @@ jobs:
         NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
         NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }}
         NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ secrets.SITE_KEY }}
-
+        NEXT_PUBLIC_TURNSTILE_ENABLED: ${{ secrets.TURNSTILE_ENABLED }}
 
   deploy:
     needs: build
@@ -79,6 +79,7 @@ jobs:
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
           NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }}
           NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ secrets.SITE_KEY }}
+          NEXT_PUBLIC_TURNSTILE_ENABLED: ${{ secrets.TURNSTILE_ENABLED }}
       
       # Setup GCP authentication
       - id: 'auth'

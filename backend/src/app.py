@@ -20,6 +20,7 @@ app.config["METRO_KEY"] = os.getenv("METRO_KEY")
 app.config["GCP_BUCKET_NAME"] = os.getenv("GCP_BUCKET_NAME")
 app.config["CLOUDFLARE_SHARED_SECRET"] = os.getenv("CLOUDFLARE_SHARED_SECRET")
 app.config["TURNSTILE_SECRET_KEY"] = os.getenv("TURNSTILE_SECRET_KEY")
+app.config["TURNSTILE_ENABLED"] = os.getenv("TURNSTILE_ENABLED", "true").lower() == "true"
 
 
 @dataclass
@@ -79,15 +80,16 @@ def validate_tokens():
         current_app.logger.warning("Invalid X-Custom-Token provided")
         abort(403)
 
-    # Validate Turnstile token
-    turnstile_token = request.headers.get("CF-Turnstile-Token")
-    if not turnstile_token:
-        current_app.logger.warning("Missing Turnstile token")
-        abort(403)
+    # Only validate Turnstile if enabled
+    if current_app.config.get("TURNSTILE_ENABLED"):
+        turnstile_token = request.headers.get("CF-Turnstile-Token")
+        if not turnstile_token:
+            current_app.logger.warning("Missing Turnstile token")
+            abort(403)
 
-    if not verify_turnstile_token(turnstile_token):
-        current_app.logger.warning("Invalid Turnstile token")
-        abort(403)
+        if not verify_turnstile_token(turnstile_token):
+            current_app.logger.warning("Invalid Turnstile token")
+            abort(403)
 
 
 @app.route("/api/health")
