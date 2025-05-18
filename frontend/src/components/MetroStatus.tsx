@@ -42,9 +42,6 @@ export default function MetroStatus() {
     }
   };
 
-  if (loading) return <Alert headingLevel="h4" type="info">Loading...</Alert>
-  if (error) return <Alert headingLevel="h4" type="error">{error}</Alert>
-
   // Show landing page if no bus data received
   if (!routeId) {
     return (
