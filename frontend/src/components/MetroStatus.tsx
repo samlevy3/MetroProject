@@ -21,13 +21,19 @@ export default function MetroStatus() {
         return;
       }
 
+      const container = document.getElementById('turnstile-widget');
+      if (!container) {
+        setTimeout(renderTurnstile, 100);
+        return;
+      }
+
       // @ts-ignore
-      window.turnstile.render('#turnstile-widget', {
+      window.turnstile.render(container, {
         sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!,
         callback: (token: string) => {
           setTurnstileToken(token);
         },
-        mode: 'non-interactive',
+        appearance: 'always',
       });
     };
 
