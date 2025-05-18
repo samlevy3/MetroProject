@@ -14,30 +14,31 @@ export default function MetroStatus() {
   const routeId = searchParams.get('routeid');
 
   const handleTurnstileSuccess = async (token: string) => {
-    setTurnstileToken(token);
-    if (routeId) {
-      try {
-        setLoading(true);
-        const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/api/metro-status`);
-        url.searchParams.append('routeid', routeId);
-        
-        const response = await fetch(url.toString(), {
-          headers: {
-            'CF-Turnstile-Token': token
-          }
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch bus data');
+    if (!routeId) return;
+    
+    try {
+      setTurnstileToken(token); // Set token first
+      setLoading(true);
+      
+      const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/api/metro-status`);
+      url.searchParams.append('routeid', routeId);
+
+      const response = await fetch(url.toString(), {
+        headers: {
+          'CF-Turnstile-Token': token
         }
-        const data = await response.json();
-        setBusData(data);
-      } catch (err) {
-        setError('Failed to fetch bus data');
-        console.error(err);
-      } finally {
-        setLoading(false);
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch bus data');
       }
+      const data = await response.json();
+      setBusData(data);
+    } catch (err) {
+      setError('Failed to fetch bus data');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -45,7 +46,7 @@ export default function MetroStatus() {
   if (error) return <Alert headingLevel="h4" type="error">{error}</Alert>
 
   // Show landing page if no bus data received
-  if (!routeId) { 
+  if (!routeId) {
     return (
       <div className="padding-4">
         <Grid row>
@@ -66,7 +67,7 @@ export default function MetroStatus() {
   return (
     <div>
       <Grid row>
-        <h1 className="usa-heading">Bus Tracker - Route {routeId}</h1>      
+        <h1 className="usa-heading">Bus Tracker - Route {routeId}</h1>
       </Grid>
       <Grid row className="margin-bottom-2">
         <Turnstile
@@ -78,6 +79,16 @@ export default function MetroStatus() {
           }}
         />
       </Grid>
+      {loading && (
+        <Grid row>
+          <Alert headingLevel="h4" type="info">Loading bus data...</Alert>
+        </Grid>
+      )}
+      {error && (
+        <Grid row>
+          <Alert headingLevel="h4" type="error">{error}</Alert>
+        </Grid>
+      )}
       {turnstileToken && busData.length > 0 && (
         <Grid row>
           <Table bordered fullWidth>
