@@ -59,8 +59,8 @@ def verify_turnstile_token(token):
 
 @app.before_request
 def validate_tokens():
-    # Skip validation for health check
-    if request.path == "/api/health":
+    # Skip validation for non-API routes and health check
+    if not request.path.startswith("/api") or request.path == "/api/health":
         return
 
     # Validate Cloudflare token
