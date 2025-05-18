@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import Head from 'next/head';
+import Script from 'next/script';
 import MetroStatus from '../components/MetroStatus';
 import { GridContainer } from '@trussworks/react-uswds';
 
@@ -8,10 +9,12 @@ export default function Home() {
   return (
     <>
       <Head>
-        <script
-          src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-        />
+        <title>DC Metro Status</title>
       </Head>
+      <Script
+        src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+        strategy="beforeInteractive"
+      />
       <div className="usa-app">
         <header className="usa-header usa-header--basic">
           <div className="usa-nav-container">
