@@ -45,7 +45,7 @@ export default function MetroStatus() {
   if (error) return <Alert headingLevel="h4" type="error">{error}</Alert>
 
   // Show landing page if no bus data received
-  if (busData.length === 0) { 
+  if (!routeId) { 
     return (
       <div className="padding-4">
         <Grid row>
