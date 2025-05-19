@@ -86,6 +86,6 @@ jobs:
           --platform managed \
           --region ${{ secrets.GCP_REGION }} \
           --allow-unauthenticated \
-          --update-env-vars "METRO_API_URL=${{ secrets.METRO_API_URL }},METRO_KEY=${{ secrets.METRO_KEY }},CLOUDFLARE_SHARED_SECRET=${{ secrets.CLOUDFLARE_SHARED_SECRET }},GCP_BUCKET_NAME=${{ secrets.GCP_BUCKET_NAME }},TURNSTILE_SECRET_KEY=${{ secrets.TURNSTILE_SECRET_KEY }},TURNSTILE_ENABLED=${{ secrets.TURNSTILE_ENABLED }}" \
+          --update-env-vars "METRO_API_URL=${{ secrets.METRO_API_URL }},METRO_KEY=${{ secrets.METRO_KEY }},CLOUDFLARE_SHARED_SECRET=${{ secrets.CLOUDFLARE_SHARED_SECRET }},GCP_BUCKET_NAME=${{ secrets.GCP_BUCKET_NAME }},TURNSTILE_SECRET_KEY=${{ secrets.TURNSTILE_SECRET_KEY }},TURNSTILE_ENABLED=${{ vars.TURNSTILE_ENABLED }}" \
           --concurrency 5 \
           --max-instances 1 
